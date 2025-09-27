@@ -1,0 +1,409 @@
+<!-- templates/analysis_report.html -->
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>文件分析報告 - {{ filename }}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f9f9f9;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1, h2, h3 {
+      color: #333;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      padding: 10px 15px;
+      background: #1976d2;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .back-link:hover {
+      background: #1565c0;
+    }
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .overview-item {
+      background: #f0f8ff;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      border: 1px solid #d0e8ff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .overview-number {
+      font-size: 28px;
+      font-weight: bold;
+      color: #1976d2;
+    }
+    .overview-label {
+      font-size: 14px;
+      color: #666;
+      margin-top: 5px;
+    }
+    .element-list {
+      margin: 20px 0;
+      padding: 20px;
+      border-left: 4px solid #1976d2;
+      background: #f8f9fa;
+      border-radius: 0 4px 4px 0;
+    }
+    .tabs {
+      display: flex;
+      margin: 30px 0 20px 0;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    .tab {
+      padding: 12px 24px;
+      cursor: pointer;
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-bottom: none;
+      margin-right: 5px;
+      border-radius: 5px 5px 0 0;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    .tab:hover {
+      background: #e0e0e0;
+    }
+    .tab.active {
+      background: white;
+      border-bottom: 2px solid white;
+      margin-bottom: -2px;
+      color: #1976d2;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .property-badge {
+      display: inline-block;
+      margin: 2px;
+      padding: 3px 8px;
+      background: #e0e0e0;
+      border-radius: 12px;
+      font-size: 12px;
+    }
+    .special-element {
+      display: inline-block;
+      margin: 2px;
+      padding: 3px 8px;
+      background: #ffcc80;
+      border-radius: 12px;
+      font-size: 12px;
+    }
+    .run-style {
+      display: inline-block;
+      margin: 2px;
+      padding: 3px 8px;
+      background: #bbdefb;
+      border-radius: 12px;
+      font-size: 12px;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 15px;
+      border: 1px solid #ddd;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/analyze" class="back-link">← 重新分析</a>
+
+    <h1>📊 Word 文件分析報告</h1>
+    <p><strong>文件名稱:</strong> {{ filename }}</p>
+
+    <!-- 文件概覽 -->
+    <div class="section">
+      <h2>📈 文件概覽</h2>
+      <div class="overview-grid">
+        <div class="overview-item">
+          <div class="overview-number">{{ summary_dict.get("段落", [])|length }}</div>
+          <div class="overview-label">段落數</div>
+        </div>
+        <div class="overview-item">
+          <div class="overview-number">{{ summary_dict.get("WordArt", [])|length }}</div>
+          <div class="overview-label">WordArt</div>
+        </div>
+        {% if summary_dict.get("圖片") %}
+        <div class="overview-item">
+          <div class="overview-number">{{ summary_dict.get("圖片")|length }}</div>
+          <div class="overview-label">圖片</div>
+        </div>
+        {% endif %}
+        {% if summary_dict.get("表格") %}
+        <div class="overview-item">
+          <div class="overview-number">{{ summary_dict.get("表格")|length }}</div>
+          <div class="overview-label">表格</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- 詳細分析 -->
+    <div class="section">
+      <h2>🔍 詳細分析</h2>
+
+      <!-- 標籤頁 -->
+      <div class="tabs">
+        <div class="tab active" onclick="showTab('paragraphs')">段落分析</div>
+        {% if summary_dict.get("WordArt") %}
+        <div class="tab" onclick="showTab('wordart')">WordArt</div>
+        {% endif %}
+        {% if summary_dict.get("圖片") %}
+        <div class="tab" onclick="showTab('images')">圖片</div>
+        {% endif %}
+        {% if summary_dict.get("表格") %}
+        <div class="tab" onclick="showTab('tables')">表格</div>
+        {% endif %}
+      </div>
+
+      <!-- 段落分析 -->
+      <div id="paragraphs" class="tab-content active">
+        <h3>段落內容分析</h3>
+        {% for para in summary_dict.get("段落", []) %}
+        <div class="element-list">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <strong>段落 {{ para.get("編號", loop.index) }}</strong>
+            <span style="font-size: 14px; color: #666;">
+              {{ para.get("文字", "")|length }} 字符
+            </span>
+          </div>
+
+          <!-- 段落內容 -->
+          <div style="margin: 15px 0; padding: 15px; background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; font-family: 'Microsoft JhengHei', sans-serif;">
+            {{ para.get("文字", "") }}
+          </div>
+
+          <!-- 段落屬性 -->
+          {% if para.get("屬性") %}
+          <div style="margin: 10px 0; font-size: 13px;">
+            <strong>段落屬性:</strong>
+            {% if para.get("屬性", {}).get("align") %}
+            <span class="property-badge">對齊: {{ para.get("屬性", {}).get("align") }}</span>
+            {% endif %}
+            {% if para.get("屬性", {}).get("spacing") %}
+            <span class="property-badge">行距設定</span>
+            {% endif %}
+            {% if para.get("屬性", {}).get("indent") %}
+            <span class="property-badge">自訂縮排</span>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          <!-- 文字樣式分析 -->
+          {% if para.get("runs") %}
+          <div style="margin-top: 15px;">
+            <strong>文字樣式分析:</strong>
+            {% for run in para.get("runs", []) %}
+            {% if run.get("style") %}
+            <div style="margin: 10px 0; padding: 12px; background: #f5f5f5; border-radius: 4px; border-left: 3px solid #1976d2;">
+              <div style="font-family: monospace; margin-bottom: 8px;">
+                "{{ run.get("text", "")[:50] }}{% if run.get("text", "")|length > 50 %}...{% endif %}"
+                <span style="font-size: 12px; color: #666;">({{ run.get("text", "")|length }}字符)</span>
+              </div>
+              <div style="font-size: 12px;">
+                {% if run.get("style", {}).get("bold") %}
+                <span class="run-style">粗體</span>
+                {% endif %}
+                {% if run.get("style", {}).get("italic") %}
+                <span class="run-style">斜體</span>
+                {% endif %}
+                {% if run.get("style", {}).get("underline") %}
+                <span class="run-style">底線</span>
+                {% endif %}
+                {% if run.get("style", {}).get("strike") %}
+                <span class="run-style">刪除線</span>
+                {% endif %}
+                {% if run.get("style", {}).get("size_pt") %}
+                <span class="run-style">{{ run.get("style", {}).get("size_pt") }}pt</span>
+                {% endif %}
+                {% if run.get("style", {}).get("color") and run.get("style", {}).get("color") != "#000000" %}
+                <span class="run-style" style="color: {{ run.get("style", {}).get("color") }};">顏色</span>
+                {% endif %}
+                {% if run.get("style", {}).get("background_color") %}
+                <span class="run-style" style="background: {{ run.get("style", {}).get("background_color") }};">背景色</span>
+                {% endif %}
+                {% if run.get("style", {}).get("fonts") %}
+                  {% set fonts = run.get("style", {}).get("fonts", {}) %}
+                  {% if fonts.get("ascii") %}
+                  <span class="run-style">字型: {{ fonts.get("ascii") }}</span>
+                  {% elif fonts.get("hAnsi") %}
+                  <span class="run-style">字型: {{ fonts.get("hAnsi") }}</span>
+                  {% endif %}
+                {% endif %}
+              </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- WordArt 分析 -->
+      {% if summary_dict.get("WordArt") %}
+      <div id="wordart" class="tab-content">
+        <h3>WordArt 元素分析</h3>
+        {% for wa in summary_dict.get("WordArt", []) %}
+        <div class="element-list">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <strong>WordArt {{ loop.index }}</strong>
+            <span style="font-size: 13px;">{{ wa.get("版本", "未知") }}</span>
+          </div>
+
+          <div style="margin: 15px 0; padding: 15px; background: #fff8e1; border: 1px solid #ffecb3; border-radius: 4px;">
+            {{ wa.get("文字", "") }}
+          </div>
+
+          {% if wa.get("幾何") %}
+          <div style="margin: 10px 0; font-size: 13px;">
+            <strong>幾何資訊:</strong>
+            <span class="property-badge">寬: {{ wa.get("幾何", {}).get("寬_cm", 0) }}cm</span>
+            <span class="property-badge">高: {{ wa.get("幾何", {}).get("高_cm", 0) }}cm</span>
+            {% if wa.get("幾何", {}).get("旋轉度") %}
+            <span class="property-badge">旋轉: {{ wa.get("幾何", {}).get("旋轉度") }}°</span>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          {% if wa.get("style") %}
+          <div style="margin: 10px 0; font-size: 13px;">
+            <strong>樣式設定:</strong>
+            {% if wa.get("style", {}).get("fonts") %}
+            <span class="property-badge">字型: {{ wa.get("style", {}).get("fonts", {}).get("name", "") or wa.get("style", {}).get("fonts", {}).get("latin", "") }}</span>
+            {% endif %}
+            {% if wa.get("style", {}).get("size_pt") %}
+            <span class="property-badge">字號: {{ wa.get("style", {}).get("size_pt") }}pt</span>
+            {% endif %}
+            {% if wa.get("style", {}).get("fill_color") %}
+            <span class="property-badge" style="color: {{ wa.get("style", {}).get("fill_color") }};">填色: {{ wa.get("style", {}).get("fill_color") }}</span>
+            {% endif %}
+            {% if wa.get("style", {}).get("outline_color") %}
+            <span class="property-badge" style="color: {{ wa.get("style", {}).get("outline_color") }};">輪廓: {{ wa.get("style", {}).get("outline_color") }}</span>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- 圖片分析 -->
+      {% if summary_dict.get("圖片") %}
+      <div id="images" class="tab-content">
+        <h3>圖片元素分析</h3>
+        {% for img in summary_dict.get("圖片", []) %}
+        <div class="element-list">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <strong>圖片 {{ loop.index }}</strong>
+            <span style="font-size: 13px;">{{ img.get("類型", "未知") }}</span>
+          </div>
+
+          {% if img.get("幾何資訊") %}
+          <div style="margin: 10px 0; font-size: 13px;">
+            <strong>尺寸資訊:</strong>
+            <span class="property-badge">寬: {{ img.get("幾何資訊", {}).get("寬_cm", 0) }}cm</span>
+            <span class="property-badge">高: {{ img.get("幾何資訊", {}).get("高_cm", 0) }}cm</span>
+          </div>
+          {% endif %}
+
+          {% if img.get("視覺效果") %}
+          <div style="margin: 10px 0; font-size: 13px;">
+            <strong>視覺效果:</strong>
+            {% for effect_name in img.get("視覺效果", {}).keys() %}
+            <span class="property-badge">{{ effect_name }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- 表格分析 -->
+      {% if summary_dict.get("表格") %}
+      <div id="tables" class="tab-content">
+        <h3>表格元素分析</h3>
+        {% for table in summary_dict.get("表格", []) %}
+        <div class="element-list">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <strong>表格 {{ loop.index }}</strong>
+            {% if table.get("行列結構") %}
+            <span style="font-size: 13px;">{{ table.get("行列結構", {}).get("行數", 0) }}行 × {{ table.get("行列結構", {}).get("列數", 0) }}列</span>
+            {% endif %}
+          </div>
+
+          {% if table.get("內容統計") %}
+          <div style="margin: 10px 0; font-size: 13px;">
+            <strong>內容統計:</strong>
+            <span class="property-badge">填滿率: {{ table.get("內容統計", {}).get("填滿率", 0) }}%</span>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- 原始資料 -->
+    <div class="section">
+      <h2>📄 原始資料</h2>
+      <details>
+        <summary>點擊查看完整資料結構</summary>
+        <pre>{{ summary_json }}</pre>
+      </details>
+    </div>
+  </div>
+
+  <script>
+    function showTab(tabName) {
+      // 隱藏所有標籤內容
+      var tabContents = document.getElementsByClassName("tab-content");
+      for (var i = 0; i < tabContents.length; i++) {
+        tabContents[i].classList.remove("active");
+      }
+
+      // 移除所有標籤的 active 類別
+      var tabs = document.getElementsByClassName("tab");
+      for (var i = 0; i < tabs.length; i++) {
+        tabs[i].classList.remove("active");
+      }
+
+      // 顯示選定的標籤內容
+      document.getElementById(tabName).classList.add("active");
+
+      // 為點擊的標籤添加 active 類別
+      event.currentTarget.classList.add("active");
+    }
+  </script>
+</body>
+</html>

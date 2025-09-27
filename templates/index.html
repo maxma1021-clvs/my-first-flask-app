@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>Auto Grader - 首頁</title>
+</head>
+<body>
+<h1>📄 自動評分系統</h1>
+
+<h2>上傳規則表</h2>
+<form method="post" action="/api/upload_rules" enctype="multipart/form-data">
+  <input type="file" name="file" accept=".xlsx" required>
+  <button type="submit">上傳規則</button>
+</form>
+
+<h2>上傳學生作答</h2>
+<form method="post" action="/score" enctype="multipart/form-data">
+  <input type="file" name="file" accept=".docx,.doc,.rtf" required>
+  <button type="submit">開始評分</button>
+</form>
+
+<hr>
+<p>⚠️ 請先上傳規則表，再進行學生作答上傳。</p>
+</body>
+</html>
+

@@ -1,0 +1,18 @@
+# --- Web Framework ---
+flask>=3.0.0
+werkzeug>=3.0.0
+
+# --- Excel / DataFrame ---
+pandas>=2.2.0
+openpyxl>=3.1.0   # pandas 讀寫 Excel
+filelock>=3.12.0  # 避免多人同時寫入標準答案檔
+
+# --- Word 文件解析 (取代 Aspose) ---
+python-docx>=1.1.0
+lxml>=5.3.0       # XML fallback 解析
+
+# --- AI API ---
+openai>=1.0.0     # 新版 SDK，支援 from openai import OpenAI
+
+# --- 其他工具 (可選，若有使用) ---
+# requests>=2.31.0   # 若要額外做 API 呼叫，可加
