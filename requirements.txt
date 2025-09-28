@@ -16,3 +16,6 @@ openai>=1.0.0     # 新版 SDK，支援 from openai import OpenAI
 
 # --- 其他工具 (可選，若有使用) ---
 # requests>=2.31.0   # 若要額外做 API 呼叫，可加
+
+# --- WSGI Server ---
+gunicorn>=21.2.0
